@@ -1,10 +1,10 @@
 package;
 
 import flixel.FlxState;
+import flixel.addons.ui.FlxButtonPlus;
 import flixel.addons.ui.FlxUI;
 import flixel.addons.ui.FlxUITabMenu;
 import flixel.text.FlxText;
-import flixel.ui.FlxButton;
 import haxe.Json;
 import sinlib.utilities.Application;
 import sinlib.utilities.TryCatch;
@@ -50,10 +50,11 @@ class PlayState extends FlxState
 		var container_group = new FlxUI(null, ui_container);
 		container_group.name = 'Data';
 
-		var loadOGJsonButton:FlxButton = new FlxButton(10, 10, "Load chart you would like to convert", function()
+		var loadOGJsonButton:FlxButtonPlus = new FlxButtonPlus(10, 10, function()
 		{
 			loadChart();
-		});
+		}, "Load chart you would like to convert", 200);
+
 
 		container_group.add(loadOGJsonButton);
 		ui_container.addGroup(container_group);
@@ -86,6 +87,8 @@ class PlayState extends FlxState
 
 	public function getChartType(chartFile:Dynamic):ChartTypes
 	{
+		final hasSongField:Bool = Reflect.hasField(chartFile, 'song');
+
 		final hasGfVersionField:Bool = Reflect.hasField(chartFile, 'gfVersion');
 
 		final hasGeneratedByField:Bool = Reflect.hasField(chartFile, 'generatedBy');
@@ -99,7 +102,7 @@ class PlayState extends FlxState
 		{
 			return ChartTypes.VSLICE;
 		}
-		else
+		else if (hasSongField)
 		{
 			return ChartTypes.LEGACY;
 		}
