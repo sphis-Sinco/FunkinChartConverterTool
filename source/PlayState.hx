@@ -7,6 +7,10 @@ import flixel.addons.ui.FlxUIDropDownMenu;
 import flixel.addons.ui.FlxUITabMenu;
 import flixel.text.FlxText;
 import haxe.Json;
+import moonchart.formats.BasicFormat.FormatStringify;
+import moonchart.formats.fnf.FNFVSlice;
+import moonchart.formats.fnf.legacy.FNFLegacy;
+import moonchart.formats.fnf.legacy.FNFPsych;
 import sinlib.utilities.Application;
 import sinlib.utilities.TryCatch;
 import sys.io.File;
@@ -16,13 +20,16 @@ using StringTools;
 
 class PlayState extends FlxState
 {
-	var watermark:FlxText = new FlxText(10, 10, 0, '', 16);
+	public static var watermark:FlxText;
 
 	var ui_container:FlxUITabMenu;
 	final ui_container_tabs = [{name: 'Data', label: 'Data'}];
 
 	public var JSON_TO_CONVERT:Dynamic = null;
 	public var JSON_METADATA:Dynamic;
+
+	public var JSON_CHART_PATH:String;
+	public var JSON_META_PATH:String;
 
 	public var OLD_CHART_TYPE:ChartTypes = UNKNOWN;
 	public var NEW_CHART_TYPE:ChartTypes = VSLICE;
@@ -33,6 +40,7 @@ class PlayState extends FlxState
 	{
 		trace(CHART_TYPES);
 
+		watermark = new FlxText(10, 10, 0, '', 16);
 		watermark.text = 'FCCT v${Application.VERSION}';
 		watermark.alignment = LEFT;
 		add(watermark);
@@ -105,8 +113,14 @@ class PlayState extends FlxState
 				warningText.text = 'Missing V-Slice metadata';
 				return;
 			}
+			else if (OLD_CHART_TYPE == NEW_CHART_TYPE)
+			{
+				warningText.text = 'Same chart type';
+				return;
+			}
 
 			trace('Transfer ${OLD_CHART_TYPE} chart to ${NEW_CHART_TYPE} chart');
+			convertChart(JSON_TO_CONVERT, NEW_CHART_TYPE);
 		}, "Convert chart");
 
 		loadOGJsonButton.update(0);
@@ -151,6 +165,7 @@ class PlayState extends FlxState
 
 		if (chartRelated)
 		{
+			JSON_CHART_PATH = filePath;
 			JSON_TO_CONVERT = chartFile;
 
 			OLD_CHART_TYPE = getChartType(chartFile);
@@ -164,6 +179,7 @@ class PlayState extends FlxState
 				return null;
 			}
 
+			JSON_META_PATH = filePath;
 			JSON_METADATA = chartFile;
 		}
 
@@ -195,6 +211,54 @@ class PlayState extends FlxState
 		}
 
 		return ChartTypes.UNKNOWN;
+	}
+	public function convertChart(Json:Dynamic, newFormat:ChartTypes):Void
+	{
+		switch (newFormat)
+		{
+			case VSLICE:
+				var newChart:FNFVSlice = new FNFVSlice();
+
+				var curChartType:ChartTypes = getChartType(Json);
+
+				if (curChartType == LEGACY)
+				{
+					var oldChart:FNFLegacy = new FNFLegacy();
+					oldChart.fromFile(JSON_CHART_PATH);
+
+					newChart.fromFormat(oldChart);
+
+					var vsliceChart:Dynamic = newChart.stringify();
+					var chart:String = vsliceChart.data;
+					var meta:String = vsliceChart.meta;
+
+					final splitPath:Array<String> = JSON_CHART_PATH.split('/');
+					final newFileName:String = splitPath[splitPath.length - 1].split('.')[0];
+
+					newFileName.replace('-easy', '');
+					newFileName.replace('-normal', '');
+					newFileName.replace('-hard', '');
+					newFileName.replace('-erect', '');
+					newFileName.replace('-nightmare', '');
+
+					trace(JSON_CHART_PATH);
+					trace(newFileName);
+
+					fileDialog.save('${newFileName}-chart.json', chart, function()
+					{
+						fileDialog.save('${newFileName}-metadata.json', meta);
+					});
+				}
+
+			case LEGACY:
+				var newChart:FNFLegacy;
+
+			case PSYCH:
+				var newChart:FNFPsych;
+
+			case UNKNOWN:
+				return;
+		}
 	}
 }
 
