@@ -3,6 +3,7 @@ package;
 import flixel.FlxState;
 import flixel.addons.ui.FlxButtonPlus;
 import flixel.addons.ui.FlxUI;
+import flixel.addons.ui.FlxUIDropDownMenu;
 import flixel.addons.ui.FlxUITabMenu;
 import flixel.text.FlxText;
 import haxe.Json;
@@ -21,11 +22,16 @@ class PlayState extends FlxState
 	final ui_container_tabs = [{name: 'Data', label: 'Data'}];
 
 	public var JSON_TO_CONVERT:Dynamic;
+
 	public var OLD_CHART_TYPE:ChartTypes = UNKNOWN;
 	public var NEW_CHART_TYPE:ChartTypes = VSLICE;
 
+	final CHART_TYPES:Array<ChartTypes> = [VSLICE, LEGACY, PSYCH];
+
 	override public function create():Void
 	{
+		trace(CHART_TYPES);
+
 		watermark.text = 'FCCT v${Application.VERSION}';
 		watermark.alignment = LEFT;
 		add(watermark);
@@ -61,6 +67,15 @@ class PlayState extends FlxState
 			loadChart();
 		}, "Load chart you would like to convert", 200);
 
+		var newChartType:FlxUIDropDownMenu = new FlxUIDropDownMenu(loadOGJsonButton.x + loadOGJsonButton.width + ui_offset, loadOGJsonButton.y,
+			FlxUIDropDownMenu.makeStrIdLabelArray(CHART_TYPES, true), function(newType:ChartTypes)
+		{
+			final thenewtype:ChartTypes = CHART_TYPES[Std.parseInt(newType)];
+
+			NEW_CHART_TYPE = thenewtype;
+			trace(NEW_CHART_TYPE);
+		});
+
 		var convertButton:FlxButtonPlus = new FlxButtonPlus(loadOGJsonButton.x, loadOGJsonButton.y + loadOGJsonButton.height + ui_offset, function()
 		{
 			trace('Transfer ${OLD_CHART_TYPE} chart to ${NEW_CHART_TYPE} chart');
@@ -70,6 +85,7 @@ class PlayState extends FlxState
 		convertButton.update(0);
 
 		container_group.add(loadOGJsonButton);
+		container_group.add(newChartType);
 		container_group.add(convertButton);
 		ui_container.addGroup(container_group);
 	}
