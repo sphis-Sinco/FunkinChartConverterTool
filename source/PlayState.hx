@@ -190,13 +190,14 @@ class PlayState extends FlxState
 	{
 		final hasSongField:Bool = Reflect.hasField(chartFile, 'song');
 
-		final hasGfVersionField:Bool = Reflect.hasField(chartFile, 'gfVersion');
+		final hasSpeedField:Bool = Reflect.hasField(chartFile.song, 'speed');
+		final hasGfVersionField:Bool = Reflect.hasField(chartFile.song, 'gfVersion');
 
 		final hasGeneratedByField:Bool = Reflect.hasField(chartFile, 'generatedBy');
 		final hasVersionField:Bool = Reflect.hasField(chartFile, 'version');
 		final hasScrollSpeedField:Bool = Reflect.hasField(chartFile, 'scrollSpeed');
 
-		if (hasGfVersionField)
+		if (hasGfVersionField && hasSpeedField)
 		{
 			return ChartTypes.PSYCH;
 		}
@@ -212,43 +213,52 @@ class PlayState extends FlxState
 
 		return ChartTypes.UNKNOWN;
 	}
+
 	public function convertChart(Json:Dynamic, newFormat:ChartTypes):Void
 	{
 		switch (newFormat)
 		{
 			case VSLICE:
 				var newChart:FNFVSlice = new FNFVSlice();
-
 				var curChartType:ChartTypes = getChartType(Json);
+
+				var genBy:String = '${newChart.getGeneratedBy()} - ${curChartType} to VSlice';
 
 				if (curChartType == LEGACY)
 				{
 					var oldChart:FNFLegacy = new FNFLegacy();
 					oldChart.fromFile(JSON_CHART_PATH);
-
 					newChart.fromFormat(oldChart);
 
-					var vsliceChart:Dynamic = newChart.stringify();
-					var chart:String = vsliceChart.data;
-					var meta:String = vsliceChart.meta;
-
-					final splitPath:Array<String> = JSON_CHART_PATH.split('/');
-					final newFileName:String = splitPath[splitPath.length - 1].split('.')[0];
-
-					newFileName.replace('-easy', '');
-					newFileName.replace('-normal', '');
-					newFileName.replace('-hard', '');
-					newFileName.replace('-erect', '');
-					newFileName.replace('-nightmare', '');
-
-					trace(JSON_CHART_PATH);
-					trace(newFileName);
-
-					fileDialog.save('${newFileName}-chart.json', chart, function()
-					{
-						fileDialog.save('${newFileName}-metadata.json', meta);
-					});
 				}
+				else if (curChartType == PSYCH)
+				{
+					var oldChart:FNFPsych = new FNFPsych();
+					oldChart.fromFile(JSON_CHART_PATH);
+					newChart.fromFormat(oldChart);
+				}
+				newChart.updateGeneratedBy(genBy);
+
+				var vsliceChart:Dynamic = newChart.stringify();
+				var chart:String = vsliceChart.data;
+				var meta:String = vsliceChart.meta;
+
+				final splitPath:Array<String> = JSON_CHART_PATH.split('/');
+				final newFileName:String = splitPath[splitPath.length - 1].split('.')[0];
+
+				newFileName.replace('-easy', '');
+				newFileName.replace('-normal', '');
+				newFileName.replace('-hard', '');
+				newFileName.replace('-erect', '');
+				newFileName.replace('-nightmare', '');
+
+				trace(JSON_CHART_PATH);
+				trace(newFileName);
+
+				fileDialog.save('${newFileName}-chart.json', chart, function()
+				{
+					fileDialog.save('${newFileName}-metadata.json', meta);
+				});
 
 			case LEGACY:
 				var newChart:FNFLegacy;

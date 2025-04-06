@@ -7,6 +7,7 @@ import moonchart.formats.BasicFormat;
 import moonchart.formats.fnf.FNFGlobal.BasicFNFNoteType;
 import moonchart.formats.fnf.FNFGlobal.FNFNoteTypeResolver;
 import moonchart.formats.fnf.legacy.FNFLegacy.FNFLegacyMetaValues;
+import sinlib.utilities.TryCatch;
 
 using StringTools;
 
@@ -26,6 +27,7 @@ enum abstract FNFVSliceNoteType(String) from String to String
 
 class FNFVSlice extends BasicJsonFormat<FNFVSliceFormat, FNFVSliceMeta>
 {
+
 	// FNF V-Slice constants
 	public static inline var VSLICE_PREVIEW_END:Int = 15000;
 	public static inline var VSLICE_DEFAULT_NOTE_SKIN:String = "funkin";
@@ -78,6 +80,22 @@ class FNFVSlice extends BasicJsonFormat<FNFVSliceFormat, FNFVSliceMeta>
 		noteTypeResolver = FNFGlobal.createNoteTypeResolver();
 		noteTypeResolver.register(FNFVSliceNoteType.VSLICE_DEFAULT, BasicNoteType.DEFAULT);
 		noteTypeResolver.register(FNFVSliceNoteType.VSLICE_MOM, BasicFNFNoteType.ALT_ANIM);
+	}
+
+	public function updateGeneratedBy(newValue:String):Void
+	{
+		this.data.generatedBy = newValue;
+		this.meta.generatedBy = newValue;
+	}
+
+	public function getGeneratedBy():String
+	{
+		TryCatch.tryCatch(() ->
+		{
+			return this.data.generatedBy;
+		});
+
+		return PlayState.watermark.text;
 	}
 
 	// Could be useful converting erect mixes
