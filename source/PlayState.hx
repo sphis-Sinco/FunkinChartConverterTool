@@ -126,9 +126,12 @@ class PlayState extends FlxState
 			}
 
 			trace('Transfer ${OLD_CHART_TYPE} chart to ${NEW_CHART_TYPE} chart');
+			#if !DISABLE_CRASH_HANDLING
 			TryCatch.tryCatch(function()
 			{
+			#end
 				convertChart(JSON_TO_CONVERT, NEW_CHART_TYPE);
+			#if !DISABLE_CRASH_HANDLING
 			}, {
 					traceErr: true,
 					errFunc: function()
@@ -136,6 +139,7 @@ class PlayState extends FlxState
 						warningText.text = 'An error has occored';
 					}
 			});
+			#end
 		}, "Convert chart");
 
 		loadOGJsonButton.update(0);
@@ -267,6 +271,7 @@ class PlayState extends FlxState
 					newChart.fromFormat(oldChart);
 				}
 				newChart.updateGeneratedBy(genBy);
+				newChart.formatting = '\t';
 
 				var vsliceChart:Dynamic = newChart.stringify();
 				var chart:String = vsliceChart.data;
@@ -287,10 +292,17 @@ class PlayState extends FlxState
 
 					newChart.fromFormat(oldChart);
 				}
+				else if (curChartType == PSYCH)
+				{
+					var oldChart:FNFPsych = new FNFPsych();
+					oldChart.fromFile(JSON_CHART_PATH);
+					newChart.fromFormat(oldChart);
+				}
+				newChart.formatting = '\t';
 
-				var finalChart:Dynamic = newChart.stringify();
+				var finalChart:FormatStringify = newChart.stringify();
 
-				fileDialog.save('${newFileName}.json', finalChart);
+				fileDialog.save('${newFileName}.json', Std.string(finalChart.data));
 
 			case PSYCH:
 				var newChart:FNFPsych;
