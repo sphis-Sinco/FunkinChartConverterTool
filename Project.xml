@@ -49,6 +49,7 @@
 	<!--<haxelib name="nape-haxe4" />-->
 
 	<haxelib name="sinlib" />
+	<haxelib name="moonchart" />
 
 	<!-- ______________________________ Haxedefines _____________________________ -->
 
