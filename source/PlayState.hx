@@ -20,6 +20,10 @@ class PlayState extends FlxState
 	var ui_container:FlxUITabMenu;
 	final ui_container_tabs = [{name: 'Data', label: 'Data'}];
 
+	public var JSON_TO_CONVERT:Dynamic;
+	public var OLD_CHART_TYPE:ChartTypes = UNKNOWN;
+	public var NEW_CHART_TYPE:ChartTypes = VSLICE;
+
 	override public function create():Void
 	{
 		watermark.text = 'FCCT v${Application.VERSION}';
@@ -45,18 +49,26 @@ class PlayState extends FlxState
 		super.update(elapsed);
 	}
 
+	final ui_offset:Float = 16;
+
 	public function addDataTab():Void
 	{
 		var container_group = new FlxUI(null, ui_container);
 		container_group.name = 'Data';
 
-		var loadOGJsonButton:FlxButtonPlus = new FlxButtonPlus(10, 10, function()
+		var loadOGJsonButton:FlxButtonPlus = new FlxButtonPlus(ui_offset, ui_offset, function()
 		{
 			loadChart();
 		}, "Load chart you would like to convert", 200);
 
+		var convertButton:FlxButtonPlus = new FlxButtonPlus(loadOGJsonButton.x, loadOGJsonButton.y + loadOGJsonButton.height + ui_offset, function()
+		{
+			trace('Transfer ${OLD_CHART_TYPE} chart to ${NEW_CHART_TYPE} chart');
+		}, "Convert chart");
+
 
 		container_group.add(loadOGJsonButton);
+		container_group.add(convertButton);
 		ui_container.addGroup(container_group);
 	}
 	var fileDialog:FileDialogHandler = new FileDialogHandler();
@@ -77,8 +89,10 @@ class PlayState extends FlxState
 					throw 'Error: File loaded is not a chart file.';
 				}
 
-				final chartType:ChartTypes = getChartType(chartFile);
-				trace('${chartType} chart');
+				JSON_TO_CONVERT = chartFile;
+
+				OLD_CHART_TYPE = getChartType(chartFile);
+				trace('${OLD_CHART_TYPE} chart');
 			}, {
 					traceErr: true
 			});
