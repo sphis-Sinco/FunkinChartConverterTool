@@ -5,16 +5,16 @@ import flixel.addons.ui.FlxUITabMenu;
 
 class PlayState extends FlxState
 {
-	var container:FlxUITabMenu;
-	final container_tabs = [{name: "Data", label: 'Data'}];
+	var ui_container:FlxUITabMenu;
+	final ui_container_tabs = [{name: "Data", label: 'Data'}];
 
 	override public function create():Void
 	{
-		container = new FlxUITabMenu(null, tabs, true);
+		ui_container = new FlxUITabMenu(null, ui_container_tabs, true);
 
-		container.resize(640, 480);
-		container.screenCenter();
-		add(container);
+		ui_container.resize(640, 480);
+		ui_container.screenCenter();
+		add(ui_container);
 
 		super.create();
 	}
