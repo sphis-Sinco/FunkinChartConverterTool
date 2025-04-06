@@ -229,7 +229,6 @@ class PlayState extends FlxState
 					var oldChart:FNFLegacy = new FNFLegacy();
 					oldChart.fromFile(JSON_CHART_PATH);
 					newChart.fromFormat(oldChart);
-
 				}
 				else if (curChartType == PSYCH)
 				{
