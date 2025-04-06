@@ -21,7 +21,7 @@ class PlayState extends FlxState
 	var ui_container:FlxUITabMenu;
 	final ui_container_tabs = [{name: 'Data', label: 'Data'}];
 
-	public var JSON_TO_CONVERT:Dynamic;
+	public var JSON_TO_CONVERT:Dynamic = null;
 	public var JSON_METADATA:Dynamic;
 
 	public var OLD_CHART_TYPE:ChartTypes = UNKNOWN;
@@ -58,10 +58,14 @@ class PlayState extends FlxState
 
 	final ui_offset:Float = 16;
 
+	var warningText:FlxText;
+
 	public function addDataTab():Void
 	{
 		var container_group = new FlxUI(null, ui_container);
 		container_group.name = 'Data';
+
+		warningText = new FlxText(ui_offset, ui_container.height - (ui_offset * 4), 0, '', 16);
 
 		var loadOGJsonButton:FlxButtonPlus = new FlxButtonPlus(ui_offset, ui_offset, function()
 		{
@@ -84,9 +88,21 @@ class PlayState extends FlxState
 
 		var convertButton:FlxButtonPlus = new FlxButtonPlus(loadMetaDataBtn.x, loadMetaDataBtn.y + loadMetaDataBtn.height + ui_offset, function()
 		{
-			if (OLD_CHART_TYPE == VSLICE && JSON_METADATA == null)
+			warningText.text = '';
+
+			if (JSON_TO_CONVERT == null)
 			{
-				trace('MISSING METADATA');
+				warningText.text = 'Missing Chart';
+				return;
+			}
+			else if (OLD_CHART_TYPE == UNKNOWN)
+			{
+				warningText.text = 'Unconvertable chart';
+				return;
+			}
+			else if (OLD_CHART_TYPE == VSLICE && JSON_METADATA == null)
+			{
+				warningText.text = 'Missing V-Slice metadata';
 				return;
 			}
 
@@ -101,6 +117,8 @@ class PlayState extends FlxState
 		container_group.add(new FlxText(newChartType.x, newChartType.y - (ui_offset * 2), 0, "New chart type:", 16));
 		container_group.add(newChartType);
 		container_group.add(convertButton);
+		container_group.add(warningText);
+
 		ui_container.addGroup(container_group);
 	}
 
@@ -160,12 +178,13 @@ class PlayState extends FlxState
 
 		final hasGeneratedByField:Bool = Reflect.hasField(chartFile, 'generatedBy');
 		final hasVersionField:Bool = Reflect.hasField(chartFile, 'version');
+		final hasScrollSpeedField:Bool = Reflect.hasField(chartFile, 'scrollSpeed');
 
 		if (hasGfVersionField)
 		{
 			return ChartTypes.PSYCH;
 		}
-		else if (hasVersionField && hasGeneratedByField)
+		else if (hasVersionField && hasGeneratedByField && hasScrollSpeedField)
 		{
 			JSON_METADATA = null;
 			return ChartTypes.VSLICE;
