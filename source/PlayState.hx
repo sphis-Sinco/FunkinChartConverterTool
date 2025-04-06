@@ -12,6 +12,7 @@ import moonchart.formats.fnf.FNFVSlice;
 import moonchart.formats.fnf.legacy.FNFLegacy;
 import moonchart.formats.fnf.legacy.FNFPsych;
 import sinlib.utilities.Application;
+import sinlib.utilities.FileManager;
 import sinlib.utilities.TryCatch;
 import sys.io.File;
 import tools.FileDialogHandler;
@@ -118,9 +119,23 @@ class PlayState extends FlxState
 				warningText.text = 'Same chart type';
 				return;
 			}
+			else if (OLD_CHART_TYPE == VSLICE && NEW_CHART_TYPE == LEGACY)
+			{
+				warningText.text = 'V-Slice charts are unconvertable to legacy';
+				return;
+			}
 
 			trace('Transfer ${OLD_CHART_TYPE} chart to ${NEW_CHART_TYPE} chart');
-			convertChart(JSON_TO_CONVERT, NEW_CHART_TYPE);
+			TryCatch.tryCatch(function()
+			{
+				convertChart(JSON_TO_CONVERT, NEW_CHART_TYPE);
+			}, {
+					traceErr: true,
+					errFunc: function()
+					{
+						warningText.text = 'An error has occored';
+					}
+			});
 		}, "Convert chart");
 
 		loadOGJsonButton.update(0);
@@ -216,11 +231,26 @@ class PlayState extends FlxState
 
 	public function convertChart(Json:Dynamic, newFormat:ChartTypes):Void
 	{
+		var curChartType:ChartTypes = getChartType(Json);
+
+		final splitPath:Array<String> = JSON_CHART_PATH.split('/');
+		var newFileName:String = splitPath[splitPath.length - 1].split('.')[0];
+
+		newFileName.replace('-chart', '');
+
+		newFileName.replace('-easy', '');
+		newFileName.replace('-normal', '');
+		newFileName.replace('-hard', '');
+		newFileName.replace('-erect', '');
+		newFileName.replace('-nightmare', '');
+
+		trace(JSON_CHART_PATH);
+		trace(newFileName);
+
 		switch (newFormat)
 		{
 			case VSLICE:
 				var newChart:FNFVSlice = new FNFVSlice();
-				var curChartType:ChartTypes = getChartType(Json);
 
 				var genBy:String = '${newChart.getGeneratedBy()} - ${curChartType} to VSlice';
 
@@ -242,18 +272,6 @@ class PlayState extends FlxState
 				var chart:String = vsliceChart.data;
 				var meta:String = vsliceChart.meta;
 
-				final splitPath:Array<String> = JSON_CHART_PATH.split('/');
-				final newFileName:String = splitPath[splitPath.length - 1].split('.')[0];
-
-				newFileName.replace('-easy', '');
-				newFileName.replace('-normal', '');
-				newFileName.replace('-hard', '');
-				newFileName.replace('-erect', '');
-				newFileName.replace('-nightmare', '');
-
-				trace(JSON_CHART_PATH);
-				trace(newFileName);
-
 				fileDialog.save('${newFileName}-chart.json', chart, function()
 				{
 					fileDialog.save('${newFileName}-metadata.json', meta);
@@ -261,6 +279,18 @@ class PlayState extends FlxState
 
 			case LEGACY:
 				var newChart:FNFLegacy;
+				newChart = new FNFLegacy();
+
+				if (curChartType == VSLICE)
+				{
+					var oldChart:FNFVSlice = new FNFVSlice(JSON_TO_CONVERT, JSON_METADATA).fromFile(JSON_CHART_PATH);
+
+					newChart.fromFormat(oldChart);
+				}
+
+				var finalChart:Dynamic = newChart.stringify();
+
+				fileDialog.save('${newFileName}.json', finalChart);
 
 			case PSYCH:
 				var newChart:FNFPsych;
