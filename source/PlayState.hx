@@ -119,9 +119,9 @@ class PlayState extends FlxState
 				warningText.text = 'Same chart type';
 				return;
 			}
-			else if (OLD_CHART_TYPE == VSLICE && NEW_CHART_TYPE == LEGACY)
+			else if (OLD_CHART_TYPE == VSLICE && (NEW_CHART_TYPE == LEGACY || NEW_CHART_TYPE == PSYCH))
 			{
-				warningText.text = 'V-Slice charts are unconvertable to legacy';
+				warningText.text = 'V-Slice charts are unconvertable to ${NEW_CHART_TYPE}';
 				return;
 			}
 
@@ -311,6 +311,12 @@ class PlayState extends FlxState
 				if (curChartType == LEGACY)
 				{
 					var oldChart:FNFLegacy = new FNFLegacy();
+					oldChart.fromFile(JSON_CHART_PATH);
+					newChart.fromFormat(oldChart);
+				}
+				else if (curChartType == VSLICE)
+				{
+					var oldChart:FNFVSlice = new FNFVSlice();
 					oldChart.fromFile(JSON_CHART_PATH);
 					newChart.fromFormat(oldChart);
 				}
