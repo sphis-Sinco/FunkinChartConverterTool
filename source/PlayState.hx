@@ -22,6 +22,7 @@ class PlayState extends FlxState
 	final ui_container_tabs = [{name: 'Data', label: 'Data'}];
 
 	public var JSON_TO_CONVERT:Dynamic;
+	public var JSON_METADATA:Dynamic;
 
 	public var OLD_CHART_TYPE:ChartTypes = UNKNOWN;
 	public var NEW_CHART_TYPE:ChartTypes = VSLICE;
@@ -64,10 +65,15 @@ class PlayState extends FlxState
 
 		var loadOGJsonButton:FlxButtonPlus = new FlxButtonPlus(ui_offset, ui_offset, function()
 		{
-			loadChart();
+			openFileDialogueFile(true);
 		}, "Load chart you would like to convert", 200);
 
-		var newChartType:FlxUIDropDownMenu = new FlxUIDropDownMenu(loadOGJsonButton.x + loadOGJsonButton.width + ui_offset, loadOGJsonButton.y,
+		var loadMetaDataBtn:FlxButtonPlus = new FlxButtonPlus(loadOGJsonButton.x, loadOGJsonButton.y + loadOGJsonButton.height + ui_offset, function()
+		{
+			openFileDialogueFile(false, true);
+		}, "Load chart metadata (V-Slice only)", 200);
+
+		var newChartType:FlxUIDropDownMenu = new FlxUIDropDownMenu(loadOGJsonButton.x + loadOGJsonButton.width + (ui_offset * 2), loadMetaDataBtn.y * 2,
 			FlxUIDropDownMenu.makeStrIdLabelArray(CHART_TYPES, true), function(newType:ChartTypes)
 		{
 			final thenewtype:ChartTypes = CHART_TYPES[Std.parseInt(newType)];
@@ -76,8 +82,14 @@ class PlayState extends FlxState
 			trace(NEW_CHART_TYPE);
 		});
 
-		var convertButton:FlxButtonPlus = new FlxButtonPlus(loadOGJsonButton.x, loadOGJsonButton.y + loadOGJsonButton.height + ui_offset, function()
+		var convertButton:FlxButtonPlus = new FlxButtonPlus(loadMetaDataBtn.x, loadMetaDataBtn.y + loadMetaDataBtn.height + ui_offset, function()
 		{
+			if (OLD_CHART_TYPE == VSLICE && JSON_METADATA == null)
+			{
+				trace('MISSING METADATA');
+				return;
+			}
+
 			trace('Transfer ${OLD_CHART_TYPE} chart to ${NEW_CHART_TYPE} chart');
 		}, "Convert chart");
 
@@ -85,36 +97,59 @@ class PlayState extends FlxState
 		convertButton.update(0);
 
 		container_group.add(loadOGJsonButton);
+		container_group.add(loadMetaDataBtn);
+		container_group.add(new FlxText(newChartType.x, newChartType.y - (ui_offset * 2), 0, "New chart type:", 16));
 		container_group.add(newChartType);
 		container_group.add(convertButton);
 		ui_container.addGroup(container_group);
 	}
+
 	var fileDialog:FileDialogHandler = new FileDialogHandler();
 
-	public function loadChart():Void
+	public function openFileDialogueFile(chartRelated:Bool = false, metadata:Bool = false):Void
 	{
 		fileDialog.open(function()
 		{
 			TryCatch.tryCatch(() ->
 			{
-				var filePath:String = fileDialog.path.replace('\\', '/');
-				// trace(filePath);
-				var chartFile:Dynamic = Json.parse(File.getContent(filePath));
-				// trace(chartFile);
-
-				if (chartFile == null)
-				{
-					throw 'Error: File loaded is not a chart file.';
-				}
-
-				JSON_TO_CONVERT = chartFile;
-
-				OLD_CHART_TYPE = getChartType(chartFile);
-				trace('${OLD_CHART_TYPE} chart');
+				loadFile(chartRelated, metadata);
 			}, {
 					traceErr: true
 			});
 		});
+	}
+
+	public function loadFile(chartRelated:Bool = false, metadata:Bool = false):Dynamic
+	{
+		var filePath:String = fileDialog.path.replace('\\', '/');
+		// trace(filePath);
+		var chartFile:Dynamic = Json.parse(File.getContent(filePath));
+		// trace(chartFile);
+
+		if (chartFile == null)
+		{
+			throw 'Error: File loaded is not a ${(chartRelated ? 'chart' : 'metadata')} file.';
+		}
+
+		if (chartRelated)
+		{
+			JSON_TO_CONVERT = chartFile;
+
+			OLD_CHART_TYPE = getChartType(chartFile);
+			trace('${OLD_CHART_TYPE} chart');
+		}
+
+		if (metadata)
+		{
+			if (!Reflect.hasField(chartFile, 'playData'))
+			{
+				return null;
+			}
+
+			JSON_METADATA = chartFile;
+		}
+
+		return chartFile;
 	}
 
 	public function getChartType(chartFile:Dynamic):ChartTypes
@@ -132,6 +167,7 @@ class PlayState extends FlxState
 		}
 		else if (hasVersionField && hasGeneratedByField)
 		{
+			JSON_METADATA = null;
 			return ChartTypes.VSLICE;
 		}
 		else if (hasSongField)
