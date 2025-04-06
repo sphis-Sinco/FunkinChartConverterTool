@@ -14,6 +14,8 @@ class PlayState extends FlxState
 
 		ui_container.resize(640, 480);
 		ui_container.screenCenter();
+		ui_container.selected_tab = 0;
+                
 		add(ui_container);
 
 		super.create();
