@@ -306,6 +306,19 @@ class PlayState extends FlxState
 
 			case PSYCH:
 				var newChart:FNFPsych;
+				newChart = new FNFPsych();
+
+				if (curChartType == LEGACY)
+				{
+					var oldChart:FNFLegacy = new FNFLegacy();
+					oldChart.fromFile(JSON_CHART_PATH);
+					newChart.fromFormat(oldChart);
+				}
+				newChart.formatting = '\t';
+
+				var finalChart:FormatStringify = newChart.stringify();
+
+				fileDialog.save('${newFileName}.json', Std.string(finalChart.data));
 
 			case UNKNOWN:
 				return;
