@@ -1,6 +1,7 @@
 package;
 
 import flixel.FlxState;
+import flixel.addons.ui.FlxUI;
 import flixel.addons.ui.FlxUITabMenu;
 
 class PlayState extends FlxState
@@ -15,8 +16,11 @@ class PlayState extends FlxState
 		ui_container.resize(640, 480);
 		ui_container.screenCenter();
 		ui_container.selected_tab = 0;
-                
+
 		add(ui_container);
+		ui_container.scrollFactor.set();
+
+		addDataTab();
 
 		super.create();
 	}
@@ -24,5 +28,12 @@ class PlayState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+	}
+	public function addDataTab():Void
+	{
+		var container_group = new FlxUI(null, ui_container);
+		container_group.name = "Data";
+
+		ui_container.addGroup(container_group);
 	}
 }
