@@ -66,6 +66,8 @@ class PlayState extends FlxState
 			trace('Transfer ${OLD_CHART_TYPE} chart to ${NEW_CHART_TYPE} chart');
 		}, "Convert chart");
 
+		loadOGJsonButton.update(0);
+		convertButton.update(0);
 
 		container_group.add(loadOGJsonButton);
 		container_group.add(convertButton);
